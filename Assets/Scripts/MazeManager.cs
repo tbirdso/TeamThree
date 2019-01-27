@@ -79,11 +79,6 @@ public class MazeManager : MonoBehaviour {
 	void Start () {
 		MakeMaze ();
 	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
 
 	#region Public Methods
 
@@ -241,7 +236,7 @@ public class MazeManager : MonoBehaviour {
 						cur.EdgeRules = new Dictionary<EdgeDirection, EdgeRule> ();
 
 					if (curPos != null && nextPos != null && curPos.x != null && curPos.y != null && nextPos.x != null && nextPos.y != null) {
-						if (curPos.y > nextPos.y) {
+						if (curPos.y > nextPos.y || (cur.gridPosition.x == 0 && cur.gridPosition.y == 0)) {
 							cur.EdgeRules [EdgeDirection.south] = EdgeRule.pass;
 
 
@@ -332,7 +327,16 @@ public class MazeManager : MonoBehaviour {
 			string dirPath = "";
 
 			foreach (EdgeDirection dir in Enum.GetValues(typeof(EdgeDirection))) {
-				if (edges [dir] == EdgeRule.pass) {
+				if(!edges.ContainsKey(dir)) {
+					int lr = UnityEngine.Random.Range (0, 2);
+					if (lr == 0) {
+						curNode = curNode.left;
+						dirPath = String.Concat (dirPath, "l");
+					} else {
+						curNode = curNode.right;
+						dirPath = String.Concat (dirPath, "r");
+					}
+				} else if (edges [dir] == EdgeRule.pass) {
 					curNode = curNode.left;
 					dirPath = String.Concat (dirPath, "l");
 				} else if (edges [dir] == EdgeRule.wall) {

@@ -59,40 +59,42 @@ public class Tile {
 				}
 
 				Tile adjTile = mgr.GetTile (adj);
-				
-				if (adjTile == null) {
-					//edge of maze
-					//Debug.Log("Pass " + pass + " was out of bounds");
-					EdgeRules[dir] = EdgeRule.wall;
 
-				} else {
-					if (adjTile != null && (adjTile.EdgeRules != null)) {
-						if (EdgeRules.ContainsKey (dir) && adjTile.EdgeRules.ContainsKey(OppositeDirections[dir])) {
-							EdgeRules [dir] = adjTile.EdgeRules [OppositeDirections [dir]];
-						} else if (!EdgeRules.ContainsKey(dir)) {
-							EdgeRules.Add(dir,adjTile.EdgeRules [OppositeDirections [dir]]);
+				if (!EdgeRules.ContainsKey (dir)) {
+					if (adjTile == null) {
+						//edge of maze
+						//Debug.Log("Pass " + pass + " was out of bounds");
+						EdgeRules [dir] = EdgeRule.wall;
+
+					} else {
+						if (adjTile != null && (adjTile.EdgeRules != null)) {
+							if (EdgeRules.ContainsKey (dir) && adjTile.EdgeRules.ContainsKey (OppositeDirections [dir])) {
+								EdgeRules [dir] = adjTile.EdgeRules [OppositeDirections [dir]];
+							} else if (!EdgeRules.ContainsKey (dir) && adjTile.EdgeRules.ContainsKey (OppositeDirections [dir])) {
+								EdgeRules.Add (dir, adjTile.EdgeRules [OppositeDirections [dir]]);
+							}
+						} else if (!EdgeRules.ContainsKey (dir)) {
+							EdgeRules.Add (dir, EdgeRule.unknown);
 						}
-					} else if(!EdgeRules.ContainsKey(dir)) {
-						EdgeRules.Add(dir,EdgeRule.unknown);
 					}
-
-					string s = "Paths available for ";
-					string t = "Paths unknown for ";
-					foreach (KeyValuePair<EdgeDirection, EdgeRule> p in EdgeRules) {
-						if (p.Value == EdgeRule.pass)
-							s = string.Concat (s, p.Key);
-						if (p.Value == EdgeRule.unknown)
-							t = string.Concat (t, p.Key);
-					}
-
-					Debug.Log (s);
-					Debug.Log (t);
-
-					//Debug.Log ("Pass " + pass + " has rule " + EdgeRules [dir]);
 				}
 			}
 		}
 
+		string s = "Paths available for ";
+		string t = "Paths unknown for ";
+		foreach (KeyValuePair<EdgeDirection, EdgeRule> p in EdgeRules) {
+			if (p.Value == EdgeRule.pass)
+				s = string.Concat (s, p.Key);
+			if (p.Value == EdgeRule.unknown)
+				t = string.Concat (t, p.Key);
+		}
+
+		Debug.Log (s);
+		Debug.Log (t);
+		Debug.Log ("For tile at x = " + gridPosition.x + " y = " + gridPosition.y);
+
+		//Debug.Log ("Pass " + pass + " has rule " + EdgeRules [dir]);
 	}
 }
 	
