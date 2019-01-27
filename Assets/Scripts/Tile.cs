@@ -2,20 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum EdgeRule {
-	pass,
-	wall,
-	unknown
-}
 
-public enum EdgeDirection {
-	north,
-	east,
-	south,
-	west
-}
 
-public class Tile : MonoBehaviour {
+public class Tile {
 
 	public Dictionary<EdgeDirection,Tile> AdjacentTiles;
 	public Dictionary<EdgeDirection,EdgeRule> EdgeRules;
@@ -34,7 +23,10 @@ public class Tile : MonoBehaviour {
 	public void MakeEdgeRules() {
 		EdgeRules = new Dictionary<EdgeDirection, EdgeRule> ();
 
+		int pass = 0;
+
 		foreach (EdgeDirection dir in System.Enum.GetValues(typeof(EdgeDirection))) {
+			pass++;
 			
 			if (!AdjacentTiles.ContainsKey (dir)) {
 				
@@ -44,11 +36,17 @@ public class Tile : MonoBehaviour {
 				
 				if (AdjacentTiles [dir] == null) {
 					//edge of maze
+					//Debug.Log("Pass " + pass + " was out of bounds");
 					EdgeRules[dir] = EdgeRule.wall;
 
 				} else {
+					if (AdjacentTiles [dir] != null && AdjacentTiles [dir].EdgeRules != null && AdjacentTiles [OppositeDirections [dir]] != null) {
+						EdgeRules [dir] = AdjacentTiles [dir].EdgeRules [OppositeDirections [dir]];
+					} else {
+						EdgeRules [dir] = EdgeRule.unknown;
+					}
 
-					EdgeRules [dir] = AdjacentTiles [dir].EdgeRules [OppositeDirections [dir]];
+					//Debug.Log ("Pass " + pass + " has rule " + EdgeRules [dir]);
 				}
 			}
 		}
@@ -56,3 +54,15 @@ public class Tile : MonoBehaviour {
 	}
 }
 	
+public enum EdgeRule {
+	pass,
+	wall,
+	unknown
+}
+
+public enum EdgeDirection {
+	north,
+	east,
+	south,
+	west
+}
