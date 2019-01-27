@@ -32,6 +32,7 @@ public class Tile : MonoBehaviour {
 
 
 	public void MakeEdgeRules() {
+		EdgeRules = new Dictionary<EdgeDirection, EdgeRule> ();
 
 		foreach (EdgeDirection dir in System.Enum.GetValues(typeof(EdgeDirection))) {
 			

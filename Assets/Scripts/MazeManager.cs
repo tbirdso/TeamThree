@@ -10,6 +10,7 @@ public class MazeManager : MonoBehaviour {
 	int TILE_LENGTH = 25;
 	int TILE_HEIGHT = 0;
 
+	bool DEBUG = true;
 	#endregion
 
 	#region Definitions
@@ -28,8 +29,9 @@ public class MazeManager : MonoBehaviour {
 
 	private TileNode TilePrefabTree;
 
-	private int _height = 1;
-	private int height {
+
+	/*private int _height = 1;
+	public int height {
 		set {
 			if (value >= 1)
 				_height = value;
@@ -40,7 +42,7 @@ public class MazeManager : MonoBehaviour {
 	}
 
 	private int _width = 1;
-	private int width {
+	public int width {
 		set {
 			if (value >= 1)
 				_width = value;
@@ -48,7 +50,10 @@ public class MazeManager : MonoBehaviour {
 		get {
 			return _width;
 		}
-	}
+	}*/
+
+	public int height;
+	public int width;
 
 	//Pointer to array with _height tiles in y direction and _width tiles in x direction
 	private Tile[,] MazeTilesArray;
@@ -63,7 +68,7 @@ public class MazeManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
+		MakeMaze ();
 	}
 	
 	// Update is called once per frame
@@ -73,24 +78,43 @@ public class MazeManager : MonoBehaviour {
 
 	#region Public Methods
 
-	public void MakeMaze(int I = 3, int J = 3) {
+	public void MakeMaze() {
 
-		MazeTilesArray = new Tile[height,width];
+		int J = height;
+		int I = width;
+
+		MazeTilesArray = new Tile[J,I];
+		for (int j = 0; j < J; j++) {
+			for (int i = 0; i < I; i++) {
+				MazeTilesArray [j, i] = new Tile ();
+			}
+		}
+
+
 		Dictionary<EdgeDirection,Tile> curDirs = new Dictionary<EdgeDirection, Tile>();
 
-		for (int j = 1; j < J; j++) {
-			for (int i = 1; i < I; i++) {
+		for (int j = 0; j < J; j++) {
+			for (int i = 0; i < I; i++) {
+				curDirs.Clear ();
+
+				//Debug.Log ("j = " + j + ", i = " + i);
 
 				curDirs.Add (EdgeDirection.north, GetTile(j-1, i));
 				curDirs.Add (EdgeDirection.east, GetTile(j, i - 1));
 				curDirs.Add (EdgeDirection.south, GetTile(j + 1, i));
 				curDirs.Add (EdgeDirection.west, GetTile(j,i+1));
-					
-				MazeTilesArray [i, j].AdjacentTiles = curDirs;
-				MazeTilesArray [i, j].MakeEdgeRules ();
+
+				MazeTilesArray [j, i].AdjacentTiles = curDirs;
+				MazeTilesArray [j, i].MakeEdgeRules ();
 
 			}
 		}
+
+		GeneratePath ();
+
+		FillPathTiles ();
+
+		FillNonPathTiles ();
 
 		PlaceMazeTiles ();
 	}
@@ -111,9 +135,11 @@ public class MazeManager : MonoBehaviour {
 		for (int j = 0; j < height; j ++) {
 			for (int i = 0; i < width; i++) {
 
-				Tile curTile = GetTile (i, j);
+				Tile curTile = GetTile (j, i);
 				curPos.x = topLeftStartPos.x + i * TILE_WIDTH;
-				curPos.y = topLeftStartPos.y + j * TILE_LENGTH;
+				curPos.z = topLeftStartPos.z + j * TILE_LENGTH;
+
+				Debug.Log ("i: " + i + " j: " + j);
 
 				curTile.TileInstance = Instantiate (curTile.TilePrefab, curPos, rot);
 
@@ -136,7 +162,7 @@ public class MazeManager : MonoBehaviour {
 		} 
 
 		if (g.y > 0) {
-			w.y -= TILE_LENGTH * g.y;
+			w.z -= TILE_LENGTH * g.y;
 			g.y = 0;
 		}
 
@@ -173,6 +199,11 @@ public class MazeManager : MonoBehaviour {
 
 			Path.Add (curLoc);
 		}
+
+		Debug.Log ("Path: ");
+		foreach (Vector2 val in Path) {
+			Debug.Log (val);
+		}
 	
 		//Check path validity
 	}
@@ -191,47 +222,61 @@ public class MazeManager : MonoBehaviour {
 		for(int j = 0; j < height; j++) {
 			for (int i = 0; i < width; i++) {
 				
-				Tile cur = GetTile (i, j);
+				Tile cur = GetTile (j,i);
 
-
-				if (cur.TilePrefab != null)
-					FindPrefab (cur.EdgeRules);
+				if (cur.TilePrefab == null)
+					cur.TilePrefab = FindPrefab (cur.EdgeRules);
+				else
+					Debug.Log ("Prefab already exists");
 
 			}
 		}
 	}
 
 	private Tile GetTile(Vector2 pos) {
-	return GetTile ((int)pos.x, (int)pos.y);
+		return GetTile ((int)pos.y, (int)pos.x);
 	}
 
-	private Tile GetTile(int i, int j) {
+	private Tile GetTile(int j, int i) {
+
 		if(i < 0 || i >= width)
 			return null;
-		if(j < 0 || j > height)
+		if(j < 0 || j >= height)
 			return null;
 
-		return MazeTilesArray [i, j];
+		Debug.Log ("i = " + i + ", j = " + j);
+		return MazeTilesArray [j, i];
 	}
 		
 	private GameObject FindPrefab(Dictionary<EdgeDirection,EdgeRule> edges) {
-		
+
+		GameObject retVal;
+
 		TileNode curNode = TilePrefabTree;
 
-		foreach (EdgeDirection dir in Enum.GetValues(typeof(EdgeDirection))) {
-			if (edges [dir] == EdgeRule.pass) {
-				curNode = curNode.left;
-			} else if (edges [dir] == EdgeRule.wall) {
-				curNode = curNode.right;
-			} else {
-				int lr = UnityEngine.Random.Range (0, 1);
-				curNode = (lr == 0) ? curNode.left : curNode.right;
+		if (!DEBUG) {
+			foreach (EdgeDirection dir in Enum.GetValues(typeof(EdgeDirection))) {
+				if (edges [dir] == EdgeRule.pass) {
+					curNode = curNode.left;
+				} else if (edges [dir] == EdgeRule.wall) {
+					curNode = curNode.right;
+				} else {
+					int lr = UnityEngine.Random.Range (0, 1);
+					curNode = (lr == 0) ? curNode.left : curNode.right;
+				}
+
 			}
 
+			retVal = curNode.prefabs.Dequeue ();
+			curNode.prefabs.Enqueue (retVal);
+		} else {
+			if (TilePrefabs.Count > 0) {
+				retVal = TilePrefabs [0];
+			} else {
+				Debug.Log ("No prefabs available");
+				retVal = null;
+			}
 		}
-
-		GameObject retVal = curNode.prefabs.Dequeue ();
-		curNode.prefabs.Enqueue (retVal);
 
 		return retVal;
 	}
