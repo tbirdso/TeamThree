@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,11 +7,15 @@ using UnityEngine;
 
 public class Tile {
 
+	public MazeManager mgr;
+
 	public Dictionary<EdgeDirection,Tile> AdjacentTiles;
 	public Dictionary<EdgeDirection,EdgeRule> EdgeRules;
 
 	public GameObject TilePrefab;
 	public GameObject TileInstance;
+
+	public Vector2 gridPosition;
 
 	private Dictionary<EdgeDirection,EdgeDirection> OppositeDirections = new Dictionary<EdgeDirection,EdgeDirection> () {
 		{EdgeDirection.north,EdgeDirection.south},
@@ -19,9 +24,10 @@ public class Tile {
 		{EdgeDirection.west,EdgeDirection.east},
 	};
 
-
 	public void MakeEdgeRules() {
-		EdgeRules = new Dictionary<EdgeDirection, EdgeRule> ();
+		if (EdgeRules == null) {
+			EdgeRules = new Dictionary<EdgeDirection, EdgeRule> ();
+		}
 
 		int pass = 0;
 
@@ -33,18 +39,54 @@ public class Tile {
 				Debug.Log ("Tried to make edge rules but a tile did not have all edges accounted for.");
 
 			} else {
+
+				Vector2 adj = gridPosition;
+				switch (dir) {
+				case EdgeDirection.north:
+					adj.y += 1;
+					break;
+				case EdgeDirection.east:
+					adj.x += 1;
+					break;
+				case EdgeDirection.south:
+					adj.y += -1;
+					break;
+				case EdgeDirection.west:
+					adj.x += -1;
+					break;
+				default:
+					break;
+				}
+
+				Tile adjTile = mgr.GetTile (adj);
 				
-				if (AdjacentTiles [dir] == null) {
+				if (adjTile == null) {
 					//edge of maze
 					//Debug.Log("Pass " + pass + " was out of bounds");
 					EdgeRules[dir] = EdgeRule.wall;
 
 				} else {
-					if (AdjacentTiles [dir] != null && AdjacentTiles [dir].EdgeRules != null && AdjacentTiles [OppositeDirections [dir]] != null) {
-						EdgeRules [dir] = AdjacentTiles [dir].EdgeRules [OppositeDirections [dir]];
-					} else {
-						EdgeRules [dir] = EdgeRule.unknown;
+					if (adjTile != null && (adjTile.EdgeRules != null)) {
+						if (EdgeRules.ContainsKey (dir) && adjTile.EdgeRules.ContainsKey(OppositeDirections[dir])) {
+							EdgeRules [dir] = adjTile.EdgeRules [OppositeDirections [dir]];
+						} else if (!EdgeRules.ContainsKey(dir)) {
+							EdgeRules.Add(dir,adjTile.EdgeRules [OppositeDirections [dir]]);
+						}
+					} else if(!EdgeRules.ContainsKey(dir)) {
+						EdgeRules.Add(dir,EdgeRule.unknown);
 					}
+
+					string s = "Paths available for ";
+					string t = "Paths unknown for ";
+					foreach (KeyValuePair<EdgeDirection, EdgeRule> p in EdgeRules) {
+						if (p.Value == EdgeRule.pass)
+							s = string.Concat (s, p.Key);
+						if (p.Value == EdgeRule.unknown)
+							t = string.Concat (t, p.Key);
+					}
+
+					Debug.Log (s);
+					Debug.Log (t);
 
 					//Debug.Log ("Pass " + pass + " has rule " + EdgeRules [dir]);
 				}

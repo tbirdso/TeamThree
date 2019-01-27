@@ -1549,8 +1549,8 @@ MonoBehaviour:
   StartPoint: {x: 0, y: 0}
   EndPoint: {x: 4, y: 2}
   WorldStartPoint: {x: 0, y: 0, z: 0}
-  height: 10
   width: 5
+  height: 6
 --- !u!4 &706641287
 Transform:
   m_ObjectHideFlags: 0
