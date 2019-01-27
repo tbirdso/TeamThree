@@ -27,7 +27,7 @@ public class MazeManager : MonoBehaviour {
 
 	public Vector3 WorldStartPoint = new Vector3(0,0,0);
 
-	private TileNode TilePrefabTree;
+	private TileNode TilePrefabTree = new TileNode();
 
 
 	/*private int _height = 1;
@@ -83,6 +83,15 @@ public class MazeManager : MonoBehaviour {
 		int J = height;
 		int I = width;
 
+		Tile testTileHere = new Tile ();
+		if (testTileHere != null)
+			Debug.Log ("Test tile is not null");
+		else
+			Debug.Log ("Tile did not succeed");
+
+
+		BuildGameObjectTree ();
+
 		MazeTilesArray = new Tile[J,I];
 		for (int j = 0; j < J; j++) {
 			for (int i = 0; i < I; i++) {
@@ -104,12 +113,20 @@ public class MazeManager : MonoBehaviour {
 				curDirs.Add (EdgeDirection.south, GetTile(j + 1, i));
 				curDirs.Add (EdgeDirection.west, GetTile(j,i+1));
 
+				int count = 0;
+				foreach (KeyValuePair<EdgeDirection,Tile> s in curDirs) {
+					if (s.Value != null)
+						count++;
+				}
+
 				MazeTilesArray [j, i].AdjacentTiles = curDirs;
+
 				MazeTilesArray [j, i].MakeEdgeRules ();
 
 			}
 		}
 
+		Debug.Log ("Generating path");
 		GeneratePath ();
 
 		FillPathTiles ();
@@ -136,14 +153,12 @@ public class MazeManager : MonoBehaviour {
 			for (int i = 0; i < width; i++) {
 
 				Tile curTile = GetTile (j, i);
-				curPos.x = topLeftStartPos.x + i * TILE_WIDTH;
-				curPos.z = topLeftStartPos.z + j * TILE_LENGTH;
-
-				Debug.Log ("i: " + i + " j: " + j);
+				curPos.x = topLeftStartPos.x - i * TILE_WIDTH;
+				curPos.z = topLeftStartPos.z - j * TILE_LENGTH;
 
 				curTile.TileInstance = Instantiate (curTile.TilePrefab, curPos, rot);
 
-				Debug.Log ("Instantiated prefab at " + curPos.x + " " + curPos.y + " " + curPos.z);
+//				Debug.Log ("Instantiated prefab at " + curPos.x + " " + curPos.y + " " + curPos.z);
 			}
 		}
 
@@ -213,6 +228,7 @@ public class MazeManager : MonoBehaviour {
 		foreach (Vector2 tileLoc in Path) {
 			Tile cur = GetTile (tileLoc);
 			cur.TilePrefab = FindPrefab (cur.EdgeRules);
+			Debug.Log ("Found tile " + cur.TilePrefab.ToString ());
 		}
 
 	}
@@ -244,7 +260,7 @@ public class MazeManager : MonoBehaviour {
 		if(j < 0 || j >= height)
 			return null;
 
-		Debug.Log ("i = " + i + ", j = " + j);
+		//Debug.Log ("Returning i = " + i + " j = " + j);
 		return MazeTilesArray [j, i];
 	}
 		
@@ -254,18 +270,36 @@ public class MazeManager : MonoBehaviour {
 
 		TileNode curNode = TilePrefabTree;
 
-		if (!DEBUG) {
+		//FIXME
+		if (true) {
+			string dirPath = "";
+
+			Debug.Log ("Here comes the prefabs");
+
 			foreach (EdgeDirection dir in Enum.GetValues(typeof(EdgeDirection))) {
 				if (edges [dir] == EdgeRule.pass) {
 					curNode = curNode.left;
+					dirPath = String.Concat (dirPath, "l");
 				} else if (edges [dir] == EdgeRule.wall) {
 					curNode = curNode.right;
+					dirPath = String.Concat (dirPath, "r");
 				} else {
 					int lr = UnityEngine.Random.Range (0, 1);
-					curNode = (lr == 0) ? curNode.left : curNode.right;
+					if (lr == 0) {
+						curNode = curNode.left;
+						dirPath = String.Concat (dirPath, "l");
+					} else {
+						curNode = curNode.right;
+						dirPath = String.Concat (dirPath, "r");
+					}
+
 				}
 
 			}
+			if (curNode.prefabs.Count == 0)
+				Debug.Log ("Found no prefabs for: " + dirPath);
+			else
+				Debug.Log ("Found " + curNode.prefabs.Count + " prefabs for " + dirPath);
 
 			retVal = curNode.prefabs.Dequeue ();
 			curNode.prefabs.Enqueue (retVal);
@@ -286,9 +320,11 @@ public class MazeManager : MonoBehaviour {
 		InitTree (TilePrefabTree);
 
 		foreach (GameObject prefab in TilePrefabs) {
+
 			TileData data = prefab.GetComponent<TileData> ();
 
 			TileNode curPoint = TilePrefabTree;
+
 			curPoint = data.North ? curPoint.left : curPoint.right;
 			curPoint = data.East ? curPoint.left : curPoint.right;
 			curPoint = data.South ? curPoint.left : curPoint.right;
@@ -299,7 +335,6 @@ public class MazeManager : MonoBehaviour {
 	}
 
 	private void InitTree(TileNode NESWtree) {
-		NESWtree = new TileNode ();
 
 		int leafCount = 0;
 
