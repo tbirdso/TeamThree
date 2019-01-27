@@ -9,7 +9,7 @@ public class TileData : MonoBehaviour {
     public bool South;
     public bool West;
 
-    public string Color;
+    public TileColor Color;
 
     private int _numberInScene = 0;
     public int numberInScene
@@ -24,4 +24,19 @@ public class TileData : MonoBehaviour {
         }
     }
 
+}
+
+public enum TileColor {
+	black,
+	blue,
+	purple,
+	green,
+	cyan,
+	red,
+	yellow,
+	brown,
+	orange,
+	white,
+	pink,
+	gray
 }
