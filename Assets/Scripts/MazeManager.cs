@@ -215,7 +215,7 @@ public class MazeManager : MonoBehaviour {
 	}
 		
 	private GameObject FindPrefab(Dictionary<EdgeDirection,EdgeRule> edges) {
-		//TODO: tree to find prefabs
+		
 		TileNode curNode = TilePrefabTree;
 
 		foreach (EdgeDirection dir in Enum.GetValues(typeof(EdgeDirection))) {

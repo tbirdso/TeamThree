@@ -32,7 +32,7 @@ public class Tile : MonoBehaviour {
 
 
 	public void MakeEdgeRules() {
-		//FIXME
+
 		foreach (EdgeDirection dir in System.Enum.GetValues(typeof(EdgeDirection))) {
 			
 			if (!AdjacentTiles.ContainsKey (dir)) {
