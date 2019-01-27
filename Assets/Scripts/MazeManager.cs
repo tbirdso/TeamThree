@@ -11,6 +11,15 @@ public class MazeManager : MonoBehaviour {
 	int TILE_HEIGHT = 0;
 
 	bool DEBUG = true;
+
+	/* CONVENTIONS
+	*
+	*	+Z = NORTH
+	*	+X = EAST
+	*	-Z = SOUTH
+	*	-X = WEST
+	*/
+
 	#endregion
 
 	#region Definitions
@@ -51,9 +60,9 @@ public class MazeManager : MonoBehaviour {
 			return _width;
 		}
 	}*/
-
-	public int height;
 	public int width;
+	public int height;
+
 
 	//Pointer to array with _height tiles in y direction and _width tiles in x direction
 	private Tile[,] MazeTilesArray;
@@ -83,19 +92,19 @@ public class MazeManager : MonoBehaviour {
 		int J = height;
 		int I = width;
 
-		Tile testTileHere = new Tile ();
-		if (testTileHere != null)
-			Debug.Log ("Test tile is not null");
-		else
-			Debug.Log ("Tile did not succeed");
-
-
 		BuildGameObjectTree ();
 
 		MazeTilesArray = new Tile[J,I];
 		for (int j = 0; j < J; j++) {
 			for (int i = 0; i < I; i++) {
-				MazeTilesArray [j, i] = new Tile ();
+				MazeTilesArray [j, i] = new Tile () {
+					gridPosition = new Vector2() {
+						x = i,
+						y = j,
+					},
+					mgr = this,
+				};
+
 			}
 		}
 
@@ -108,20 +117,14 @@ public class MazeManager : MonoBehaviour {
 
 				//Debug.Log ("j = " + j + ", i = " + i);
 
-				curDirs.Add (EdgeDirection.north, GetTile(j-1, i));
-				curDirs.Add (EdgeDirection.east, GetTile(j, i - 1));
-				curDirs.Add (EdgeDirection.south, GetTile(j + 1, i));
-				curDirs.Add (EdgeDirection.west, GetTile(j,i+1));
-
-				int count = 0;
-				foreach (KeyValuePair<EdgeDirection,Tile> s in curDirs) {
-					if (s.Value != null)
-						count++;
-				}
+				curDirs.Add (EdgeDirection.north, GetTile(j + 1, i));
+				curDirs.Add (EdgeDirection.east, GetTile(j,i+1));
+				curDirs.Add (EdgeDirection.south, GetTile(j - 1, i));
+				curDirs.Add (EdgeDirection.west, GetTile(j, i - 1));
 
 				MazeTilesArray [j, i].AdjacentTiles = curDirs;
 
-				MazeTilesArray [j, i].MakeEdgeRules ();
+				//Debug.Log ("Value of adj tiles is " + MazeTilesArray [0, 0].AdjacentTiles [EdgeDirection.north]);
 
 			}
 		}
@@ -153,8 +156,8 @@ public class MazeManager : MonoBehaviour {
 			for (int i = 0; i < width; i++) {
 
 				Tile curTile = GetTile (j, i);
-				curPos.x = topLeftStartPos.x - i * TILE_WIDTH;
-				curPos.z = topLeftStartPos.z - j * TILE_LENGTH;
+				curPos.x = topLeftStartPos.x + i * TILE_WIDTH;
+				curPos.z = topLeftStartPos.z + j * TILE_LENGTH;
 
 				curTile.TileInstance = Instantiate (curTile.TilePrefab, curPos, rot);
 
@@ -194,10 +197,9 @@ public class MazeManager : MonoBehaviour {
 
 		Vector2 curLoc = StartPoint;
 		Path.Add (curLoc);
-		while ((curLoc.x != EndPoint.x && curLoc.y != EndPoint.y) &&
-		      (curLoc.x < width && curLoc.y < height)) {
+		while (curLoc.x != EndPoint.x || curLoc.y != EndPoint.y) {
 
-			if (UnityEngine.Random.Range (0, 1) == 0) {
+			if (UnityEngine.Random.Range (0, 2) == 0) {
 				//Move x
 				if (curLoc.x < EndPoint.x)
 					curLoc.x++;
@@ -212,7 +214,8 @@ public class MazeManager : MonoBehaviour {
 					curLoc.y--;
 			}
 
-			Path.Add (curLoc);
+			if(!Path[Path.Count - 1].Equals(curLoc))
+				Path.Add (curLoc);
 		}
 
 		Debug.Log ("Path: ");
@@ -224,11 +227,50 @@ public class MazeManager : MonoBehaviour {
 	}
 
 	private void FillPathTiles() {
-		
+
+		if (Path.Count > 1) {
+
+			int index = 0;
+			Vector2 curPos = Path [index];
+
+
+			foreach(Vector2 nextPos in Path) {
+				if(!nextPos.Equals(new Vector2() { x = 0, y = 0})) {
+					Tile cur = GetTile (curPos);
+					if (cur.EdgeRules == null)
+						cur.EdgeRules = new Dictionary<EdgeDirection, EdgeRule> ();
+
+					if (curPos != null && nextPos != null && curPos.x != null && curPos.y != null && nextPos.x != null && nextPos.y != null) {
+						if (curPos.y > nextPos.y) {
+							cur.EdgeRules [EdgeDirection.south] = EdgeRule.pass;
+
+
+						} else if (curPos.y < nextPos.y) {
+							cur.EdgeRules [EdgeDirection.north] = EdgeRule.pass;
+						}
+
+						if (curPos.x > nextPos.x) {
+							cur.EdgeRules [EdgeDirection.west] = EdgeRule.pass;
+						} else if (curPos.x < nextPos.x) {
+							cur.EdgeRules [EdgeDirection.east] = EdgeRule.pass;
+						}
+					}
+				}
+
+				curPos = nextPos;
+			}
+		}
+
 		foreach (Vector2 tileLoc in Path) {
-			Tile cur = GetTile (tileLoc);
-			cur.TilePrefab = FindPrefab (cur.EdgeRules);
-			Debug.Log ("Found tile " + cur.TilePrefab.ToString ());
+			Debug.Log ("tileLoc is x = " + tileLoc.x + " y = " + tileLoc.y);
+
+			if (tileLoc.x < width && tileLoc.y < height) {
+				Tile cur = GetTile (tileLoc);
+
+				cur.MakeEdgeRules ();
+				cur.TilePrefab = FindPrefab (cur.EdgeRules);
+				Debug.Log ("Found tile " + cur.TilePrefab.ToString () + "for [i,j] = [" + tileLoc.x + "," + tileLoc.y + "]");
+			}
 		}
 
 	}
@@ -239,28 +281,44 @@ public class MazeManager : MonoBehaviour {
 			for (int i = 0; i < width; i++) {
 				
 				Tile cur = GetTile (j,i);
+				if(cur.EdgeRules == null)
+					cur.MakeEdgeRules ();
 
-				if (cur.TilePrefab == null)
+				if (cur.TilePrefab == null) {
 					cur.TilePrefab = FindPrefab (cur.EdgeRules);
-				else
+					Debug.Log ("Found tile " + cur.TilePrefab.ToString () + " for [i,j] = [" + i + "," + j + "]");
+				} else {
 					Debug.Log ("Prefab already exists");
+				}
 
 			}
 		}
 	}
 
-	private Tile GetTile(Vector2 pos) {
+	public Tile GetTile(Vector2 pos) {
 		return GetTile ((int)pos.y, (int)pos.x);
 	}
 
-	private Tile GetTile(int j, int i) {
+	public Tile GetTile(int j, int i) {
 
-		if(i < 0 || i >= width)
+		if (i < 0 || i >= width)
 			return null;
-		if(j < 0 || j >= height)
+			/*
+			return new Tile() {
+				gridPosition = new Vector2() {
+					x = -1,
+					y = -1,
+				}
+			};*/
+		if (j < 0 || j >= height)
 			return null;
-
-		//Debug.Log ("Returning i = " + i + " j = " + j);
+			/*return new Tile() {
+				gridPosition = new Vector2() {
+					x = -1,
+					y = -1,
+				}
+			};*/
+		
 		return MazeTilesArray [j, i];
 	}
 		
@@ -270,11 +328,8 @@ public class MazeManager : MonoBehaviour {
 
 		TileNode curNode = TilePrefabTree;
 
-		//FIXME
 		if (true) {
 			string dirPath = "";
-
-			Debug.Log ("Here comes the prefabs");
 
 			foreach (EdgeDirection dir in Enum.GetValues(typeof(EdgeDirection))) {
 				if (edges [dir] == EdgeRule.pass) {
@@ -284,7 +339,7 @@ public class MazeManager : MonoBehaviour {
 					curNode = curNode.right;
 					dirPath = String.Concat (dirPath, "r");
 				} else {
-					int lr = UnityEngine.Random.Range (0, 1);
+					int lr = UnityEngine.Random.Range (0, 2);
 					if (lr == 0) {
 						curNode = curNode.left;
 						dirPath = String.Concat (dirPath, "l");
@@ -339,8 +394,6 @@ public class MazeManager : MonoBehaviour {
 		int leafCount = 0;
 
 		makeLevel (NESWtree, 0, 4, ref leafCount);
-
-		Debug.Log ("Initialized tree with " + leafCount + " leaves");
 	}
 
 	private void makeLevel(TileNode thisNode, int level, int targetLevels, ref int leafCount) {
