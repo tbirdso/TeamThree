@@ -70,6 +70,10 @@ public class MazeManager : MonoBehaviour {
 
 	private List<Vector2> Path;
 
+	private int frames = 0;
+	private bool wallsVisible = true;
+	int i = 0;
+
 	#endregion
 
 
@@ -78,6 +82,23 @@ public class MazeManager : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		MakeMaze ();
+	}
+
+	void Update () {
+		frames++;
+
+		Debug.Log (frames);
+		Debug.Log (wallsVisible);
+		Debug.Log (i);
+
+		if (frames >= 200) {
+			frames = 0;
+
+			makeWallVisibility (wallsVisible);
+			i++;
+			wallsVisible = !wallsVisible;
+		}
+
 	}
 
 	#region Public Methods
@@ -132,6 +153,8 @@ public class MazeManager : MonoBehaviour {
 		FillNonPathTiles ();
 
 		PlaceMazeTiles ();
+
+		makeWallVisibility (false);
 	}
 
 
@@ -421,6 +444,18 @@ public class MazeManager : MonoBehaviour {
 		} else {
 			thisNode.prefabs = new Queue<GameObject> ();	
 			leafCount++;
+		}
+	}
+
+	private void makeWallVisibility(bool visible) {
+		
+		foreach (GameObject g in TilePrefabs) {
+			Transform walls = g.transform.GetChild (1);
+			foreach (Transform wall in walls) {
+				wall.gameObject.GetComponent<MeshRenderer> ().enabled = visible;
+
+			}
+				
 		}
 	}
 
