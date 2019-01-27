@@ -10,7 +10,7 @@ public class Tile {
 	public MazeManager mgr;
 
 	public Dictionary<EdgeDirection,Tile> AdjacentTiles;
-	public Dictionary<EdgeDirection,EdgeRule> EdgeRules;
+	public Dictionary<EdgeDirection,EdgeRule> EdgeRules = new Dictionary<EdgeDirection, EdgeRule>();
 
 	public GameObject TilePrefab;
 	public GameObject TileInstance;
@@ -25,9 +25,6 @@ public class Tile {
 	};
 
 	public void MakeEdgeRules() {
-		if (EdgeRules == null) {
-			EdgeRules = new Dictionary<EdgeDirection, EdgeRule> ();
-		}
 
 		int pass = 0;
 
@@ -74,7 +71,21 @@ public class Tile {
 								EdgeRules.Add (dir, adjTile.EdgeRules [OppositeDirections [dir]]);
 							}
 						} else if (!EdgeRules.ContainsKey (dir)) {
-							EdgeRules.Add (dir, EdgeRule.unknown);
+							int pw = UnityEngine.Random.Range (0, 2);
+							EdgeRule choice;
+
+							if (pw == 0) {
+								choice = EdgeRule.pass;
+							} else {
+								choice = EdgeRule.wall;
+							}
+
+							EdgeRules.Add (dir, choice);
+
+							if (!adjTile.EdgeRules.ContainsKey (OppositeDirections [dir])) {
+								adjTile.EdgeRules.Add (OppositeDirections [dir], choice);
+							}
+
 						}
 					}
 				}

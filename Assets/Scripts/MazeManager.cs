@@ -232,22 +232,31 @@ public class MazeManager : MonoBehaviour {
 			foreach(Vector2 nextPos in Path) {
 				if(!nextPos.Equals(new Vector2() { x = 0, y = 0})) {
 					Tile cur = GetTile (curPos);
-					if (cur.EdgeRules == null)
-						cur.EdgeRules = new Dictionary<EdgeDirection, EdgeRule> ();
 
 					if (curPos != null && nextPos != null && curPos.x != null && curPos.y != null && nextPos.x != null && nextPos.y != null) {
 						if (curPos.y > nextPos.y || (cur.gridPosition.x == 0 && cur.gridPosition.y == 0)) {
 							cur.EdgeRules [EdgeDirection.south] = EdgeRule.pass;
 
+							if (cur.gridPosition.y - 1 > 0)
+								GetTile ((int)cur.gridPosition.y - 1, (int)cur.gridPosition.x).EdgeRules [EdgeDirection.north] = EdgeRule.pass;
 
 						} else if (curPos.y < nextPos.y) {
 							cur.EdgeRules [EdgeDirection.north] = EdgeRule.pass;
+							if (cur.gridPosition.y + 1 < height)
+								GetTile ((int)cur.gridPosition.y + 1, (int)cur.gridPosition.x).EdgeRules [EdgeDirection.south] = EdgeRule.pass;
+
 						}
 
 						if (curPos.x > nextPos.x) {
 							cur.EdgeRules [EdgeDirection.west] = EdgeRule.pass;
+							if (cur.gridPosition.x - 1 > 0)
+								GetTile ((int)cur.gridPosition.y, (int)cur.gridPosition.x - 1).EdgeRules [EdgeDirection.east] = EdgeRule.pass;
+
 						} else if (curPos.x < nextPos.x) {
 							cur.EdgeRules [EdgeDirection.east] = EdgeRule.pass;
+							if (cur.gridPosition.x + 1 > 0)
+								GetTile ((int)cur.gridPosition.y, (int)cur.gridPosition.x + 1).EdgeRules [EdgeDirection.west] = EdgeRule.pass;
+
 						}
 					}
 				}
@@ -276,8 +285,10 @@ public class MazeManager : MonoBehaviour {
 			for (int i = 0; i < width; i++) {
 				
 				Tile cur = GetTile (j,i);
-				if(cur.EdgeRules == null)
+
+				if (!Path.Contains (cur.gridPosition)) {
 					cur.MakeEdgeRules ();
+				}
 
 				if (cur.TilePrefab == null) {
 					cur.TilePrefab = FindPrefab (cur.EdgeRules);
