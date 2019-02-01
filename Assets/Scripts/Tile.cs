@@ -92,7 +92,7 @@ public class Tile {
 			}
 		}
 
-		string s = "Paths available for ";
+		/*string s = "Paths available for ";
 		string t = "Paths unknown for ";
 		foreach (KeyValuePair<EdgeDirection, EdgeRule> p in EdgeRules) {
 			if (p.Value == EdgeRule.pass)
@@ -104,7 +104,7 @@ public class Tile {
 		Debug.Log (s);
 		Debug.Log (t);
 		Debug.Log ("For tile at x = " + gridPosition.x + " y = " + gridPosition.y);
-
+*/
 		//Debug.Log ("Pass " + pass + " has rule " + EdgeRules [dir]);
 	}
 }
