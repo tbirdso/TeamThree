@@ -82,6 +82,7 @@ public class MazeManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+
 		MakeMaze ();
 	}
 
@@ -105,6 +106,8 @@ public class MazeManager : MonoBehaviour {
 	#region Public Methods
 
 	public void MakeMaze() {
+
+		Debug.Log ("Making maze");
 
 		int J = height;
 		int I = width;
@@ -238,9 +241,11 @@ public class MazeManager : MonoBehaviour {
 		}
 
 		Debug.Log ("Path: ");
+		string pathStr = "";
 		foreach (Vector2 val in Path) {
-			Debug.Log (val);
+			pathStr = String.Concat (pathStr, " ", val.ToString ());
 		}
+		Debug.Log (pathStr);
 	
 		//Check path validity
 	}
@@ -390,10 +395,11 @@ public class MazeManager : MonoBehaviour {
 				}
 
 			}
-			if (curNode.prefabs.Count == 0)
+			/*if (curNode.prefabs.Count == 0)
 				Debug.Log ("Found no prefabs for: " + dirPath);
 			else
 				Debug.Log ("Found " + curNode.prefabs.Count + " prefabs for " + dirPath);
+*/
 
 			retVal = curNode.prefabs.Dequeue ();
 			curNode.prefabs.Enqueue (retVal);
@@ -448,9 +454,11 @@ public class MazeManager : MonoBehaviour {
 		}
 	}
 
-	/*
+
 	private void makeWallVisibility(bool visible) {
-		
+
+		Debug.Log ("Making wall visibility " + visible.ToString ());
+
 		foreach (GameObject g in TilePrefabs) {
 			Transform walls = g.transform.GetChild (1);
 			foreach (Transform wall in walls) {
@@ -460,7 +468,7 @@ public class MazeManager : MonoBehaviour {
 				
 		}
 	}
-	*/
+
 
 	#endregion
 
