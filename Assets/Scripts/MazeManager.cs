@@ -70,10 +70,10 @@ public class MazeManager : MonoBehaviour {
 
 	private List<Vector2> Path;
 
-	/*private int frames = 0;
+	private int frames = 0;
 	private bool wallsVisible = true;
 	int i = 0;
-	*/
+
 
 	#endregion
 
@@ -84,24 +84,33 @@ public class MazeManager : MonoBehaviour {
 	void Start () {
 
 		MakeMaze ();
+		makeWallVisibility (false);
 	}
 
-	/*void Update () {
+	void Update () {
+
 		frames++;
 
-		Debug.Log (frames);
-		Debug.Log (wallsVisible);
+		//Debug.Log (frames);
+		//Debug.Log (wallsVisible);
 		Debug.Log (i);
 
-		if (frames >= 200) {
+		if (frames >= 200 && wallsVisible) {
 			frames = 0;
 
+			wallsVisible = false;
 			makeWallVisibility (wallsVisible);
 			i++;
-			wallsVisible = !wallsVisible;
+
 		}
 
-	}*/
+		if (frames >= 40 && !wallsVisible) {
+			wallsVisible = true;
+			makeWallVisibility (wallsVisible);
+			frames = 0;
+		}
+
+	}
 
 	#region Public Methods
 
@@ -459,14 +468,17 @@ public class MazeManager : MonoBehaviour {
 
 		Debug.Log ("Making wall visibility " + visible.ToString ());
 
-		foreach (GameObject g in TilePrefabs) {
-			Transform walls = g.transform.GetChild (1);
-			foreach (Transform wall in walls) {
-				wall.gameObject.GetComponent<MeshRenderer> ().enabled = visible;
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				Tile t = GetTile (j, i);
 
+				Transform walls = t.TileInstance.transform.GetChild (1);
+				foreach (Transform wall in walls) {
+					wall.gameObject.GetComponent<MeshRenderer> ().enabled = visible;
+				}
 			}
-				
 		}
+
 	}
 
 
