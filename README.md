@@ -1,1 +1,5 @@
-# TeamThree
+# CUHackit 2019 Submission: "Lost in the Looking Glass"
+
+Our team entered the Clemson University "CUHackit" 2019 hackathon with a wide range of experience with VR and aimed to use the Hackathon as a learning experience to improve our development skills. We all came to CUHackit interested in creating a virtual reality project and wanted to focus on the mechanisms that make the medium unique. The two mechanisms we settled on were sight and locomotion, which are both used to affect user perceptions in any VR experience. Our project, "Lost in the Looking Glass," pulls the user into an "invisible" maze. The observer can see the exit from the maze in the distance, but their progress is impeded by walls. Teleportation must be used as a way of mapping out the environment as well as moving towards the exit to finally escape.
+
+The project was built in the Unity game engine using the SteamVR and Virtual Reality Toolkit (VRTK) as well as C# scripting. The official project submission may be found at https://devpost.com/software/teamthree.
